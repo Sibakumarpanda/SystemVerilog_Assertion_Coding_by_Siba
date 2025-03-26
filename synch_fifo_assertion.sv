@@ -1,4 +1,103 @@
 // Possible Assertions in Synchronous FIFO 
+  property reset;
+    @(posedge clk)
+    (rst==0 |=> (wr_ptr==0 && rd_ptr==0 && fifo_cnt==0 && full==0 && empty==1));
+  endproperty
+  
+  property fifo_full;
+    @(posedge clk)
+    disable iff(!rst)
+    (fifo_cnt > 7|-> full==1 );
+  endproperty
+  
+  property fifo_not_full;
+    @(posedge clk)
+    disable iff(!rst)
+    (fifo_cnt < 8|-> !full);
+  endproperty
+  
+  property fifo_should_go_full;
+    @(posedge clk)
+    disable iff(!rst)
+    (fifo_cnt==7 && rd==0 && wr==1|=> full);
+  endproperty
+  
+  property full_write_full;
+    @(posedge clk) 
+    disable iff (!rst)
+    (full && wr && !rd |=> full && $stable(wr_ptr) );
+  endproperty
+  
+  property fifo_empty;
+    @(posedge clk)
+    disable iff(!rst)
+    (fifo_cnt==0 |-> empty );
+  endproperty
+    
+  property empty_read;
+    @(posedge clk) 
+    disable iff(!rst)
+    (empty && rd && !wr |=> empty);
+  endproperty
+  /////////////////////////////////  
+  assert property(reset)
+    begin
+      $display($time, ": Assertion Passed: The design passed the reset condition");
+      $display("Read pointer, write pointer, fifo count, full flag and empty flag are now reset");
+    end
+    else
+      $display("Assertion Failed: The design failed the reset condition");
+      
+  assert property(fifo_full)
+    begin
+      $display($time, ": Assertion Passed: The design passed the fifo full condition.");
+      $display("Fifo full flag is high");
+    end
+    else
+      $display($time, ": Assertion Failed: The design failed the fifo full condition.");
+   
+  assert property(fifo_not_full)
+    begin
+      $display($time, ": Assertion Passed: The design passed the fifo not full condition.");
+      $display("Fifo full flag is not high");
+    end
+    else
+      $display($time, ": Assertion Failed: The design failed the fifo not full condition.");
+    
+    
+  assert property(fifo_should_go_full)
+    begin
+      $display($time, ": Assertion Passed: The design passed the fifo should go full condition.");
+    end
+    else
+      $display($time, ": Assertion Failed: The design failed the fifo should go full condition.");
+   
+    
+  assert property(full_write_full)
+    begin
+      $display($time, ": Assertion Passed: The design passed the write in full fifo condition.");
+      $display("You are writing in a full fifo and fifo full flag is high");
+    end
+    else
+      $display($time, ": Assertion Failed: The design failed the write in full fifo condition.");
+  
+    
+  assert property(fifo_empty)
+    begin
+      $display($time, ": Assertion Passed: The design passed the fifo empty condition.");
+      $display("Fifo empty flag is high");
+    end
+    else
+      $display($time, ": Assertion Failed: The design failed the fifo empty condition.");
+   
+  assert property(empty_read)
+    begin
+      $display($time, ": Assertion Passed: The design passed the fifo empty read condition.");
+      $display("You are trying to read from empty fifo, fifo empty flag is high");
+    end
+    else
+      $display($time, ": Assertion Failed: The design failed the fifo empty read condition.");
+   
 
 //1. Asynchronous reset assertions
   // Reset startup check //
