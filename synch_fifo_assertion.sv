@@ -1,142 +1,198 @@
-// Possible Assertions in Synchronous FIFO 
-  property reset;
-    @(posedge clk)
-    (rst==0 |=> (wr_ptr==0 && rd_ptr==0 && fifo_cnt==0 && full==0 && empty==1));
+//------------------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//(c) Copyright Siba Kumar Panda, All rights reserved
+// File    : synch_fifo_assertion.sv 
+// Project : Synchronous FIFO Verif Infra Development
+// Purpose : Possible Assertions for Synchronous FIFO verification
+// Author  : Siba Kumar Panda
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+module synch_fifo_assertion(clk,reset,re,we,data_in,data_out,full,empty);
+  
+  parameter DATA_WIDTH=32;
+  parameter ADDR_WIDTH=3;
+  
+  input clk,reset;
+  input re, we; 
+  input [DATA_WIDTH-1:0]data_in;                       //input [31:0]data_in; //32bit
+  output full,empty;    
+  output reg [DATA_WIDTH-1:0]data_out;                //output reg [31:0]data_out; //32bit  
+  reg [ADDR_WIDTH-1:0] waddr;                        //3bit-write pointer address
+  reg [ADDR_WIDTH-1:0] raddr;                       //3bit-read pointer address  
+  reg [DATA_WIDTH-1:0] mem [(2**ADDR_WIDTH-1):0];  //reg [31:0] mem [8]; Memory= width x Depth=32 x8
+    
+  property SYNCH_FIFO_RESET_CONDITION_CHECK;
+     @(posedge clk) 
+    reset |-> (raddr===0) && (waddr===0) && (empty===1) && (full===0);
   endproperty
   
-  property fifo_full;
-    @(posedge clk)
-    disable iff(!rst)
-    (fifo_cnt > 7|-> full==1 );
-  endproperty
-  
-  property fifo_not_full;
-    @(posedge clk)
-    disable iff(!rst)
-    (fifo_cnt < 8|-> !full);
-  endproperty
-  
-  property fifo_should_go_full;
-    @(posedge clk)
-    disable iff(!rst)
-    (fifo_cnt==7 && rd==0 && wr==1|=> full);
-  endproperty
-  
-  property full_write_full;
-    @(posedge clk) 
-    disable iff (!rst)
-    (full && wr && !rd |=> full && $stable(wr_ptr) );
-  endproperty
-  
-  property fifo_empty;
-    @(posedge clk)
-    disable iff(!rst)
-    (fifo_cnt==0 |-> empty );
+  P1:assert property (SYNCH_FIFO_RESET_CONDITION_CHECK)     
+    `uvm_info("P1", $sformatf("Assertion for SYNCH_FIFO_RESET_CONDITION_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+  else    
+    //`uvm_error("P1", $sformatf("Assertion for SYNCH_FIFO_RESET_CONDITION_CHECK FAILED at TIME=%0dns",$time))
+    `uvm_warning("P1", $sformatf("Assertion for SYNCH_FIFO_RESET_CONDITION_CHECK FAILED at TIME=%0dns",$time))
+    
+  property SYNCH_FIFO_EMPTY_CONDITION_CHECK;
+     @(posedge clk) disable iff (reset)
+    empty == (waddr == raddr);
   endproperty
     
-  property empty_read;
-    @(posedge clk) 
-    disable iff(!rst)
-    (empty && rd && !wr |=> empty);
-  endproperty
-  /////////////////////////////////  
-  assert property(reset)
-    begin
-      $display($time, ": Assertion Passed: The design passed the reset condition");
-      $display("Read pointer, write pointer, fifo count, full flag and empty flag are now reset");
-    end
-    else
-      $display("Assertion Failed: The design failed the reset condition");
+  P2:assert property (SYNCH_FIFO_EMPTY_CONDITION_CHECK)    
+    `uvm_info("P2", $sformatf("Assertion for SYNCH_FIFO_EMPTY_CONDITION_CHECK  PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P2", $sformatf("Assertion for SYNCH_FIFO_EMPTY_CONDITION_CHECK  FAILED at TIME=%0dns",$time))
       
-  assert property(fifo_full)
-    begin
-      $display($time, ": Assertion Passed: The design passed the fifo full condition.");
-      $display("Fifo full flag is high");
-    end
-    else
-      $display($time, ": Assertion Failed: The design failed the fifo full condition.");
-   
-  assert property(fifo_not_full)
-    begin
-      $display($time, ": Assertion Passed: The design passed the fifo not full condition.");
-      $display("Fifo full flag is not high");
-    end
-    else
-      $display($time, ": Assertion Failed: The design failed the fifo not full condition.");
+  property SYNCH_FIFO_FULL_CONDITION_CHECK;
+     @(posedge clk) disable iff (reset)
+    full == ((waddr -raddr)==7);
+  endproperty
     
-    
-  assert property(fifo_should_go_full)
-    begin
-      $display($time, ": Assertion Passed: The design passed the fifo should go full condition.");
-    end
-    else
-      $display($time, ": Assertion Failed: The design failed the fifo should go full condition.");
-   
-    
-  assert property(full_write_full)
-    begin
-      $display($time, ": Assertion Passed: The design passed the write in full fifo condition.");
-      $display("You are writing in a full fifo and fifo full flag is high");
-    end
-    else
-      $display($time, ": Assertion Failed: The design failed the write in full fifo condition.");
+  P3:assert property (SYNCH_FIFO_FULL_CONDITION_CHECK)    
+      `uvm_info("P3", $sformatf("Assertion for SYNCH_FIFO_FULL_CONDITION_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P3", $sformatf("Assertion for SYNCH_FIFO_FULL_CONDITION_CHECK  FAILED at TIME=%0dns",$time))
   
+  property SYNCH_FIFO_FULL_ATTEMPTED_WRITE;
+     @(posedge clk) disable iff (reset)
+    full && we && !re |-> $stable(waddr);
+  endproperty
     
-  assert property(fifo_empty)
-    begin
-      $display($time, ": Assertion Passed: The design passed the fifo empty condition.");
-      $display("Fifo empty flag is high");
-    end
-    else
-      $display($time, ": Assertion Failed: The design failed the fifo empty condition.");
-   
-  assert property(empty_read)
-    begin
-      $display($time, ": Assertion Passed: The design passed the fifo empty read condition.");
-      $display("You are trying to read from empty fifo, fifo empty flag is high");
-    end
-    else
-      $display($time, ": Assertion Failed: The design failed the fifo empty read condition.");
-   
-
-//1. Asynchronous reset assertions
-  // Reset startup check //
-  // need this at the very begining of the simulation //
-  property async_rst_startup;
-	  @(posedge i_clk) !i_rst_n |-> ##1 (wr_ptr==0 && rd_ptr == 0 && o_empty);
+  P4:assert property (SYNCH_FIFO_FULL_ATTEMPTED_WRITE)    
+      `uvm_info("P4", $sformatf("Assertion for SYNCH_FIFO_FULL_ATTEMPTED_WRITE  PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P4", $sformatf("Assertion for SYNCH_FIFO_FULL_ATTEMPTED_WRITE  FAILED at TIME=%0dns",$time)) 
+      
+  property SYNCH_FIFO_EMPTY_ATTEMPTED_READ;
+     @(posedge clk) disable iff (reset)
+    empty && re && !we |-> $stable(raddr);
   endproperty
+    
+  P5:assert property (SYNCH_FIFO_EMPTY_ATTEMPTED_READ)    
+      `uvm_info("P5", $sformatf("Assertion for SYNCH_FIFO_EMPTY_ATTEMPTED_READ  PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P5", $sformatf("Assertion for SYNCH_FIFO_EMPTY_ATTEMPTED_READ  FAILED at TIME=%0dns",$time)) 
   
-  // rst check in general
-  property async_rst_chk;
-	  @(negedge i_rst_n) 1'b1 |-> ##1 @(posedge i_clk) (wr_ptr==0 && rd_ptr == 0 && o_empty);
+  property SYNCH_FIFO_DATA_WRITE_READ_CHECK;
+     @(posedge clk) disable iff (reset)
+    // (we && !full) |-> (mem[waddr] == data_in);
+    (re && !empty) |-> (data_out == mem[raddr]);
   endproperty
-
-//2.Check data written at a location is the same data read when read_ptr reaches that location
-  sequence rd_detect(ptr);
-    ##[0:$] (rd_en && !o_empty && (rd_ptr == ptr));
-  endsequence
+    
+  P9:assert property (SYNCH_FIFO_DATA_WRITE_READ_CHECK)    
+      `uvm_info("P9", $sformatf("Assertion for SYNCH_FIFO_DATA_WRITE_READ_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P9", $sformatf("Assertion for SYNCH_FIFO_DATA_WRITE_READ_CHECK  FAILED at TIME=%0dns",$time))    
+      
+  property SYNCH_FIFO_DEPTH_CHECK;
+    @(posedge clk) disable iff (reset)
+    ((waddr - raddr) <= 8); // FIFO Depth=8
+  endproperty
+    
+  P10:assert property (SYNCH_FIFO_DEPTH_CHECK)    
+      `uvm_info("P10", $sformatf("Assertion for SYNCH_FIFO_DEPTH_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P10", $sformatf("Assertion for SYNCH_FIFO_DEPTH_CHECK  FAILED at TIME=%0dns",$time))  
+      
+  property SYNCH_FIFO_WRITE_POINTER_WRAPAROUND_CHECK;
+     @(posedge clk) disable iff (reset)
+    (waddr == 8) |-> (waddr == 0); // FIFO Depth=8
+  endproperty
+    
+  P11:assert property (SYNCH_FIFO_WRITE_POINTER_WRAPAROUND_CHECK)    
+      `uvm_info("P11", $sformatf("Assertion for SYNCH_FIFO_WRITE_POINTER_WRAPAROUND_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+  else    
+      `uvm_error("P11", $sformatf("Assertion for SYNCH_FIFO_WRITE_POINTER_WRAPAROUND_CHECK  FAILED at TIME=%0dns",$time)) 
+    
+  property SYNCH_FIFO_READ_POINTER_WRAPAROUND_CHECK;
+     @(posedge clk) disable iff (reset)
+    (raddr == 8) |-> (raddr == 0);
+  endproperty
+    
+  P12:assert property (SYNCH_FIFO_READ_POINTER_WRAPAROUND_CHECK)    
+      `uvm_info("P12", $sformatf("Assertion for SYNCH_FIFO_READ_POINTER_WRAPAROUND_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P12", $sformatf("Assertion for SYNCH_FIFO_READ_POINTER_WRAPAROUND_CHECK  FAILED at TIME=%0dns",$time)) 
+      
+  property SYNCH_FIFO_EMPTY_TO_NONEMPTY_TRANSITION_CHECK;
+     @(posedge clk) disable iff (reset)
+    ((empty && we) |-> !empty);
+  endproperty
+    
+  P13:assert property (SYNCH_FIFO_EMPTY_TO_NONEMPTY_TRANSITION_CHECK)    
+      `uvm_info("P13", $sformatf("Assertion for SYNCH_FIFO_EMPTY_TO_NONEMPTY_TRANSITION_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+    else    
+      `uvm_error("P13", $sformatf("Assertion for SYNCH_FIFO_EMPTY_TO_NONEMPTY_TRANSITION_CHECK  FAILED at TIME=%0dns",$time))
+      
+  property SYNCH_FIFO_FULL_TO_NONFULL_TRANSITION_CHECK;
+     @(posedge clk) disable iff (reset)
+    ((full && re) |-> !full);
+  endproperty
+    
+  P14:assert property (SYNCH_FIFO_FULL_TO_NONFULL_TRANSITION_CHECK)   
+      `uvm_info("P14", $sformatf("Assertion for SYNCH_FIFO_FULL_TO_NONFULL_TRANSITION_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+      else    
+      `uvm_error("P14", $sformatf("Assertion for SYNCH_FIFO_FULL_TO_NONFULL_TRANSITION_CHECK  FAILED at TIME=%0dns",$time)) 
+        
+  property SYNCH_FIFO_INVALID_WRITE_WHEN_FULL;
+     @(posedge clk) disable iff (reset)
+    !(full && we);
+  endproperty
+    
+  P15:assert property (SYNCH_FIFO_INVALID_WRITE_WHEN_FULL)   
+      `uvm_info("P15", $sformatf("Assertion for SYNCH_FIFO_INVALID_WRITE_WHEN_FULL PASSED at TIME=%0dns", $time), UVM_LOW)
+      else   
+      `uvm_error("P15", $sformatf("Assertion for SYNCH_FIFO_INVALID_WRITE_WHEN_FULL  FAILED at TIME=%0dns",$time))      
+      
+  property SYNCH_FIFO_INVALID_READ_WHEN_EMPTY;
+     @(posedge clk) disable iff (reset)
+     !(empty && re);
+  endproperty
+    
+  P16:assert property (SYNCH_FIFO_INVALID_READ_WHEN_EMPTY)   
+       `uvm_info("P16", $sformatf("Assertion for SYNCH_FIFO_INVALID_READ_WHEN_EMPTY PASSED at TIME=%0dns", $time), UVM_LOW)
+      else    
+       `uvm_error("P16", $sformatf("Assertion for SYNCH_FIFO_INVALID_READ_WHEN_EMPTY FAILED at TIME=%0dns",$time)) 
+        
+  property SYNCH_FIFO_UNDERFLOW_CHECK;
+     @(posedge clk) disable iff (reset)
+     !(re && empty);
+  endproperty
+    
+  P17:assert property (SYNCH_FIFO_UNDERFLOW_CHECK)   
+      `uvm_info("P17", $sformatf("Assertion for SYNCH_FIFO_UNDERFLOW_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+      else    
+      `uvm_error("P17", $sformatf("Assertion for SYNCH_FIFO_UNDERFLOW_CHECK FAILED at TIME=%0dns",$time))
+        
+  property SYNCH_FIFO_OVERFLOW_CHECK;
+     @(posedge clk) disable iff (reset)
+     !(we && full);
+  endproperty
+    
+  P18:assert property (SYNCH_FIFO_OVERFLOW_CHECK)   
+      `uvm_info("P18", $sformatf("Assertion for SYNCH_FIFO_OVERFLOW_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+      else    
+      `uvm_error("P18", $sformatf("Assertion for SYNCH_FIFO_OVERFLOW_CHECK FAILED at TIME=%0dns",$time))  
+        
+  property SYNCH_FIFO_DATA_PROPAGATION_CHECK;
+     @(posedge clk) disable iff (reset)
+    // ((we && !full) |-> mem[waddr] == data_in);
+    ((re && !empty) |-> data_out == mem[raddr]);
+  endproperty
+                                  
+  P19:assert property (SYNCH_FIFO_DATA_PROPAGATION_CHECK)   
+      `uvm_info("P19", $sformatf("Assertion for SYNCH_FIFO_DATA_PROPAGATION_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+      else    
+      `uvm_error("P19", $sformatf("Assertion for SYNCH_FIFO_DATA_PROPAGATION_CHECK FAILED at TIME=%0dns",$time)) 
+        
+  property SYNCH_FIFO_CLOCK_DOMAIN_CROSS_CHECK;
+     @(posedge clk) disable iff (reset)
+    (waddr == raddr);
+  endproperty
+    
+  P20:assert property (SYNCH_FIFO_CLOCK_DOMAIN_CROSS_CHECK)   
+      `uvm_info("P20", $sformatf("Assertion for SYNCH_FIFO_CLOCK_DOMAIN_CROSS_CHECK PASSED at TIME=%0dns", $time), UVM_LOW)
+     else    
+      `uvm_error("P20", $sformatf("Assertion for SYNCH_FIFO_CLOCK_DOMAIN_CROSS_CHECK FAILED at TIME=%0dns",$time))      
+    
   
-  property data_wr_rd_chk(wrPtr);
-    // local variable
-    integer ptr, data;
-    @(posedge i_clk) disable iff(!i_rst_n)
-    (wr_en && !o_full, ptr = wrPtr, data = i_data, $display($time, " wr_ptr=%h, i_fifo=%h",wr_ptr, i_data))
-    |-> ##1 first_match(rd_detect(ptr), $display($time, " rd_ptr=%h, o_fifo=%h",rd_ptr, o_data)) ##0  o_data == data;
-  endproperty
-
-//3.Rule-1: Never write to FIFO if it's Full!
-  property dont_write_if_full;
-    // @(posedge i_clk) disable iff(!i_rst_n) o_full |-> ##1 $stable(wr_ptr);
-    // alternative way of writing the same assertion
-    @(posedge i_clk) disable iff(!i_rst_n) wr_en && o_full |-> ##1 wr_ptr == $past(wr_ptr);
-  endproperty
-
-//4.Rule-2: Never read from an Empty FIFO!
-  property dont_read_if_empty;
-    @(posedge i_clk) disable iff(!i_rst_n) rd_en && o_empty |-> ##1 $stable(rd_ptr);
-  endproperty
-
-//5.On successful write, write_ptr should only increment by 1
-   property inc_wr_one;
-      @(posedge i_clk) disable iff(!i_rst_n) wr_en && !o_full |-> ##1 (wr_ptr-1'b1 == $past(wr_ptr));
-   endproperty
+endmodule :synch_fifo_assertion
