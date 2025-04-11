@@ -38,7 +38,49 @@
 # 29. Write an assertion such that ,When there's a no_space_err, the no_space_ctr_incr signal is flagged for exactly once clock
 # 30. Write an assertion such that ,If signal_a is active, then signal_b was active 3 cycles ago.
 # 31. Write an assertion for a synchronous FIFO of depth = 16 for the following scenarios. Assume a clock signal(clk), write and read enable signals, full flag and a word counter signal.
-    a) If the word count is >15, FIFO full flag set.
-    b) If the word count is 15 and a new write operation happens without a simultaneous read, then the FIFO full flag is set.
-
-
+# 32. Write an assertion checker to make sure that an output signal never goes X.
+# 33. Write an assertion check to make sure that a signal is high for a minimum of 2 cycles and a maximum of 6 cycles
+# 34. Write an assertion to make sure that a 5-bit grant signal only has one bit set at any time.
+# 35. Write an assertion which checks that once a valid request is asserted by the master, the arbiter provides a grant within 2 to 5 clock cycles
+# 36. How can you disable an assertion during active reset time?
+# 37. How can all assertion be turned off during simulation (with active assertions)?
+# 38. As long as signal_a is up, signal_b should not be asserted. Write an assertion for this.
+# 39. The signal_a is a pulse. it can only be asserted for one cycle, and must be deasserted in the next cycle. Write an assertion for this.
+# 40. Signal_a and signal_b can only be asserted together for one cycle; in the next cycle, at least one of them must be deasserted.
+# 41. When signal_a is asserted, signal_b must be asserted, and must remain up until one of the signals signal_c or signal_d is asserted
+# 42. After signal_a is asserted, signal_b must be deasserted, and must stay down until the next signal_a.
+# 43. Write an assertion such that ,If signal_a is received while signal_b is inactive, then on the next cycle signal_c must be inactive, and signal_b must be asserted.
+# 44. signal_a must not be asserted together with signal_b or with signal_c.
+# 45. In a RESP operation, request must be true immediately, grant must be true 3 clock cycles later, followed by request being false, and then grant being false. WAA for this.
+# 46. Request must true at the current cycle,grant must become true sometime between 1 cycle after request and the end of time.
+# 47. Req must eventually be followed by ack, which must be followed 1 cycle later by done.WAA for this.
+# 48. The active-low reset must be low for at least 6 clock cycles.WAA for this.
+# 49. Enable must remain true throughout the entire ack to done sequence. WAA for this.
+# 50. If signal_a is active, then signal_b was active 3 cycles ago.
+# 51. If the state machine reaches active1 state, it will eventually reach active2 state.
+# 52. Write an assertion such that A high for 5 cycles and B high after 4 continuous highs of A and finally both A and B are high.
+# 53. Write an assertion such that On rose of a, wait for rose of b or c. If b comes first, then d should be 1. If c comes first d should be zero.
+# 54. What are different types of assertions? 
+# 55. What are the differences between Immediate and Concurrent
+# 56. What are the advantages of writing a checker using SVA (SystemVerilog Assertions) as compared to writing it using a procedural SystemVerilog code?
+# 57. What are the different ways to write assertions for a design unit? What is a sequence as used in writing SystemVerilog Assertions?
+# 58. Is there a difference between $rose(tst_signal) and @posedge(tst_signal )? 
+# 59. Is it possible to have concurrent assertions implemented inside a class?
+# 60. What is a sequence repetition operator? What are the three different type of repetition operators used in sequences?
+# 61. Write an assertion check to make sure that a signal is high for a minimum of 2 cycles and a maximum of 6 cycles. 
+# 62. What is an implication operator? 
+# 63. What is the difference between an overlapping and non  overlapping implication operator? 
+# 64. Can implication operator be used in sequences?
+# 65 Are following assertions equivalent? 
+     a) @(posedge clk) req |=> ##10 $rose(ack);
+     b) @(posedge clk) req |-> ##11 $rose(ack);
+# 66. Is nested implication allowed in SVA? 
+# 67. What does the system task $past() do?
+# 68. Write an assertion checker to make sure that an output signal never goes X? 
+# 69. Write an assertion to make sure that the state variable in a state machine is always one hot value. Write an assertion to make sure that a 5-bit grant signal only has one bit set at any time? (only one req granted at a time) 
+# 70. Write an assertion which checks that once a valid request is asserted by the master, the arbiter provides a grant within 2 to 5 clock cycles
+# 71. How can you disable an assertion during active reset time? 
+# 72. What’s the difference between assert and assume directives in SystemVerilog?
+# 73. What is bind construct used in SystemVerilog for? 
+# 74. How can all assertions be turned off during simulation?
+# 75. What are the different ways in which a clock can be specified to a property used for assertion?
