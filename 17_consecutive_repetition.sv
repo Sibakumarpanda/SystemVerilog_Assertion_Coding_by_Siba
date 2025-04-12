@@ -42,6 +42,19 @@ end
       $dumpvars();
   end  
 endmodule
+//NOTE
+/*Repetition Operators
+Key Difference:
+a[*3] = a ##1 a ##1 a (strictly consecutive) //consecutive_repetition
+Specifies that the expression a must be true for exactly 3 consecutive clock cycles.
+a[=3] = //Nonconsecutive_repetition
+Specifies that the expression a must be true exactly 3 times, but not necessarily
+consecutively.
+a[->3] = ... a ... a ... a ... (anywhere, but exactly 3 times) //Go to _repetition -Need to check the functionality
+Consecutive Repetition with Implication
+Purpose: Specifies that the expression a must be true for 3 consecutive clock cycles, and each occurrence implies the next.
+*/
+	  
 //Log file Results
 [2025-04-12 16:32:40 UTC] vcs -full64 -licqueue '-timescale=1ns/1ns' '+vcs+flush+all' '+warn=all' '-sverilog' design.sv testbench.sv  && ./simv +vcs+lic+wait  
                          Chronologic VCS (TM)
