@@ -66,17 +66,18 @@ Similarly another question here :
  Are following assertions equivalent:
  
        @(posedge clk) A |-> ##3 B ;
-       @(posedge clk) A |=> ##3 B ;
+       @(posedge clk) A |=> ##2 B ;
 */
+
 Answers:
-       
+
 @(posedge clk) A |-> ##3 B ; //It uses Overlapping Implication Operator
 
 t:      A == 1
 t:      RHS evaluated at same clock cycle as req (Immediate Trigger)
 t+3:    B must be true
 
-@(posedge clk) A |=> ##3 B ; //It uses Non Overlapping Implication Operator
+@(posedge clk) A |=> ##2 B ; //It uses Non Overlapping Implication Operator
 
 t:      A == 1
 t+1:    RHS evaluated ,1 clock cycle after A (Practically: Slightly different trigger timing).
@@ -85,6 +86,7 @@ t+3:    B must be true
 
 Q: Why is this "less intuitive"?
 
-Because when you see ##3, your natural thought might be:
-"So B should happen 3 cycles after A, that makes sense."
-But what's less intuitive is how the clock cycles are counted in non-overlapping implication (|=>) versus overlapping implication (|->).              
+Because when you see ##2, your natural thought might be:
+"So B should happen 2 cycles after A, that makes sense." But it uses Non overlapping implication operator here.
+
+But what's less intuitive is how the clock cycles are counted in non-overlapping implication (|=>) versus overlapping implication (|->).            
