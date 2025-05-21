@@ -57,3 +57,34 @@ The second assertion starts checking immediately.
 
 While they both validate $rose(ack) at the same cycle (t+3), the implication type affects the precise triggering behavior and timing semantics, 
 which may matter if used in formal verification tools or simulations that are sensitive to assertion types.
+       
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+Similarly another question here :
+//////////////////////////////////////////////////////////////////////////////////////////////////////////       
+
+/* Similarly :
+ Are following assertions equivalent:
+ 
+       @(posedge clk) A |-> ##3 B ;
+       @(posedge clk) A |=> ##3 B ;
+*/
+Answers:
+       
+@(posedge clk) A |-> ##3 B ; //It uses Overlapping Implication Operator
+
+t:      A == 1
+t:      RHS evaluated at same clock cycle as req (Immediate Trigger)
+t+3:    B must be true
+
+@(posedge clk) A |=> ##3 B ; //It uses Non Overlapping Implication Operator
+
+t:      A == 1
+t+1:    RHS evaluated ,1 clock cycle after A (Practically: Slightly different trigger timing).
+        It is Slightly Less Intuitive to count the cycle
+t+3:    B must be true
+
+Q: Why is this "less intuitive"?
+
+Because when you see ##3, your natural thought might be:
+"So B should happen 3 cycles after A, that makes sense."
+But what's less intuitive is how the clock cycles are counted in non-overlapping implication (|=>) versus overlapping implication (|->).              
